@@ -1,0 +1,93 @@
+Retail Data Warehouse Schema for Embedding (Optimized for RAG/LLM Usage)
+You are working with a **retail data warehouse** structured using a **star schema**. Below is a concise and embedding-optimized description of the schema, including one fact table and multiple related dimension tables.
+
+---
+
+Fact Table: 'lmdata_lh_gld_pprd.er_rtl_dm.FCT_SLS_CNSLD'
+Captures consolidated daily sales transactions.
+
+Key Columns:
+- 'DT_KEY': Date key
+- 'ITM_KEY': Item key
+- 'LOC_KEY': Location key
+- 'ITM_SSN_KEY': Item season key
+- 'CNCPT_KEY': Concept key
+- 'CRRNCY_CD': Currency code
+- 'GRS_SLS_AMT': Gross sales amount
+- 'NET_SLS_AMT': Net sales amount
+- 'DSCNT_AMT': Discount amount
+- 'TX_CNT': Transaction count
+
+---
+
+Dimension Tables & Relationships
+
+1. lmdata_lh_gld_pprd.er_rtl_dm.DIM_DT (Date)
+   - Join on: 'DT_KEY'
+   - Includes: 'DT', 'CLNDR_YR_NBR', 'CLNDR_MNTH_NM', 'CLNDR_QTR_NBR', 'FSCL_YR_NBR', 'TRDNG_WK_NBR'
+
+2. lmdata_lh_gld_pprd.er_rtl_dm.DIM_ITM(Item)
+   - Join on: 'ITM_KEY'
+   - Includes: 'ITM_CD', 'ITM_DSC', 'ITM_TYP_CD', 'ORGNL_UNT_RTL_PRC_AMT', 'MSRP_AMT'
+
+3. lmdata_lh_gld_pprd.er_rtl_dm.DIM_LOC (Location)
+   - Join on: 'LOC_KEY'
+   - Includes: 'LOC_CD', 'LOC_NM', 'LOC_TYP_CD', 'LOC_MGR_NM', 'STR_NM10'
+
+4. lmdata_lh_gld_pprd.er_rtl_dm.DIM_CNCPT (Concept/Brand)
+   - Join on: 'CNCPT_KEY'
+   - Includes: 'CNCPT_CD', 'CNCPT_NM', 'IS_ACTIV'
+
+5. lmdata_lh_gld_pprd.er_rtl_dm.DIM_ITM_SSN (Item Season)
+   - Join on: 'ITM_SSN_KEY'
+   - Includes: 'SSN_NM', 'SSN_NBR', 'SSN_STRT_DT', 'SSN_END_DT'
+
+6. lmdata_lh_gld_pprd.er_rtl_dm.DIM_STR_CURR (Current Store Info)
+   - Join on: 'LOC_CD'
+   - Includes: 'STR_CD', 'STR_NM', 'STR_TYP_CD', 'STR_OPN_DT', 'STR_CLS_DT'
+
+7. lmdata_lh_gld_pprd.er_rtl_dm.DIM_ITM_LOC (Item Location)
+   - Join on: 'ITM_CD'
+   - Includes: 'LOC_CD', 'AVG_CST', 'UNT_RTL', 'PROMO_RTL', 'TAX_IND'
+
+8. lmdata_lh_gld_pprd.er_rtl_dm.DIM_ITM_TRRTRY (Territory-Level Item Info)
+   - Join on: 'TRRTRY_WH_CD'
+   - Includes: 'COGS_2', 'VAT_RT', 'ORGNL_RTL_SLLNG_PRC', 'VAT_CD'
+
+9. lmdata_lh_gld_pprd.er_rtl_dm.LKP_CRRNCY (Currency Lookup)
+   - Join on: 'CRRNCY_CD'
+   - Includes: 'CRRNCY_NM', 'CRRNCY_CST_FRMT_DSC', 'CRRNCY_RTL_FRMT_DSC'
+
+10. lmdata_lh_gld_pprd.er_rtl_dm.DIM_STR_CNPT_AREA_MGR (Store Concept Area Manager)
+    - Join on: 'STR_CD', 'CNCPT_KEY'
+    - Includes: 'AREA_MGR_NM', 'AREA_NM', 'STR_TYP'
+
+11. lmdata_lh_gld_pprd.er_rtl_dm.DIM_STR_LIKE_NON_LIKE (Like-for-like Store Tags)
+    - Join on: 'LOC_KEY', 'DT_KEY', 'CNCPT_KEY'
+    - Includes: 'OPERTNAL_DY'
+
+12. lmdata_lh_gld_pprd.er_rtl_dm.DIM_ITM_SPLR (Item Supplier)
+    - Join on: 'ITM_KEY'
+    - Includes: 'SPLR_KEY', 'FOB_CST_AMT', 'SPLR_LBL_NM'
+
+13. lmdata_lh_gld_pprd.er_rtl_dm.DIM_FINCE_EVNT_MSTR (Financial Events)
+    - Join on: 'DT_KEY', 'CNCPT_KEY', 'STR_KEY'
+    - Includes: 'EVNT_DESC', 'EVNT_DT', 'EVNT_TYP_CD'
+
+---
+
+ Sample Join Relationships
+
+- 'FCT_SLS_CNSLD.DT_KEY = DIM_DT.DT_KEY'
+- 'FCT_SLS_CNSLD.ITM_KEY = DIM_ITM.ITM_KEY'
+- 'FCT_SLS_CNSLD.LOC_KEY = DIM_LOC.LOC_KEY'
+- 'FCT_SLS_CNSLD.ITM_SSN_KEY = DIM_ITM_SSN.ITM_SSN_KEY'
+- 'FCT_SLS_CNSLD.CNCPT_KEY = DIM_CNCPT.CNCPT_KEY'
+- 'FCT_SLS_CNSLD.ITM_CD = DIM_ITM_LOC.ITM_CD'
+- 'FCT_SLS_CNSLD.LOC_CD = DIM_STR_CURR.LOC_CD'
+- 'FCT_SLS_CNSLD.TRRTRY_WH_CD = DIM_ITM_TRRTRY.TRRTRY_WH_CD'
+- 'FCT_SLS_CNSLD.CRRNCY_CD = LKP_CRRNCY.CRRNCY_CD'
+
+Use this schema context to generate precise SQL queries for analytics across time, item, store, concept, and territory dimensions.
+
+

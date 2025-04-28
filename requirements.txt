@@ -1,0 +1,30 @@
+# --- Core Flask App ---
+Flask
+Flask-Login
+Flask-WTF
+Flask-SQLAlchemy
+Flask-Migrate==3.1.0
+
+# --- Database Drivers ---
+pymysql
+databricks-sql-connector
+
+# --- LangChain & LLM Tools ---
+langchain
+langchain-community
+sentence-transformers
+requests
+
+# --- HTML Form Validation ---
+WTForms
+
+# --- Optional: For loading and splitting docs (used by TextLoader) ---
+unstructured
+chromadb
+
+# --- Optional Dev Tools ---
+python-dotenv
+psycopg2-binary
+langchain_huggingface
+pgvector
+hf_xet

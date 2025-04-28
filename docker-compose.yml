@@ -1,0 +1,67 @@
+# Specify Docker Compose file format version
+# version: '3.8' # Optional: You can specify a version if needed, 3.8 is common
+
+services:
+  db:
+    # Use the specific pgvector image you need
+    image: ankane/pgvector:latest
+    # Load environment variables for DB credentials from .env
+    env_file:
+      - .env
+    # Explicitly setting environment variables from .env is redundant if env_file is used
+    # but harmless. You can rely solely on env_file here unless you need to override
+    # environment:
+    #   POSTGRES_USER: ${POSTGRES_USER}
+    #   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    #   POSTGRES_DB: ${POSTGRES_DB}
+    # Map DB port to host - useful for connecting with external tools (like pgAdmin)
+    # Remove this port mapping if you only need inter-container communication
+    ports:
+      - "5433:5432"
+    volumes:
+      # Persistent volume for database data
+      - pgdata:/var/lib/postgresql/data
+      # Mount init scripts directory
+      - ./db/init:/docker-entrypoint-initdb.d
+
+  web:
+    # Build the image from the Dockerfile in the current directory
+    build: .
+    # Tag the built image with a name
+    image: datakonnect
+    # Ensure the db service starts before the web service
+    depends_on:
+      - db
+    # Load environment variables from .env (e.g., API keys, other config)
+    env_file:
+      - .env
+    # Explicitly set the database connection string, overriding any in .env
+    # This correctly uses the 'db' service name as the host
+    environment:
+      PG_CONNECTION_STRING: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    volumes:
+      # Bind mount the current directory into /app in the container
+      # This is GREAT for development as code changes are instantly reflected
+      # For production, you would typically remove this and rely on COPY . .
+      # in your Dockerfile to bake the code into the image.
+      - .:/app
+    # Map application port to host
+    ports:
+      - "5000:5000"
+    # Command to execute when the container starts
+    command: >
+      sh -c "
+        # Wait until the database container's port 5432 is open
+        until nc -z db 5432; do
+          echo '⏳ waiting for Postgres…'; sleep 1;
+        done &&
+        echo '✅ Postgres is up!' &&
+        # Run database migrations (assuming you use Flask-Migrate or similar)
+        flask db upgrade &&
+        # Start the web server using Gunicorn, listening on all interfaces (0.0.0.0)
+        gunicorn --bind 0.0.0.0:5000 run:app
+      "
+
+# Define the named volume for PostgreSQL data persistence
+volumes:
+  pgdata:

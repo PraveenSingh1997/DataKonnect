@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SQL Chat Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Include Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="bg-white w-full max-w-3xl h-[90vh] flex flex-col rounded-2xl shadow-lg overflow-hidden p-6">
+    
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-semibold text-gray-800">SQL Chat Assistant</h2>
+      <button id="clear-chat" class="text-sm bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-full">
+        Clear Chat
+      </button>
+    </div>
+
+    <!-- Chat History -->
+    <div id="chat-history" class="flex-1 overflow-y-auto pr-1 space-y-4"></div>
+
+    <!-- Chat Form -->
+    <form id="chat-form" class="mt-4 flex gap-2 border-t pt-4">
+      <input type="text" id="message" name="message" placeholder="Ask a question..." required
+        class="flex-1 px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+      <button type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-full transition">
+        Send
+      </button>
+    </form>
+  </div>
+
+  <script>
+    // Grab static elements
+    const clearBtn = document.getElementById('clear-chat');
+    const chatHistory = document.getElementById('chat-history');
+
+    let lastMessage = '';
+    let lastIsSQL   = false;
+
+    // retry helper
+    async function fetchWithRetry(url, options = {}, retries = 3, backoff = 500) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res;
+      } catch (err) {
+        if (retries > 0) {
+          await new Promise(r => setTimeout(r, backoff));
+          return fetchWithRetry(url, options, retries - 1, backoff * 2);
+        }
+        throw err;
+      }
+    }
+
+    // central sendMessage
+    async function sendMessage(userMessage) {
+      lastMessage = userMessage;
+      lastIsSQL   = /sql|query/i.test(userMessage);
+
+      // echo user
+      chatHistory.innerHTML += `
+        <div class="flex justify-end">
+          <div class="bg-blue-100 text-blue-900 px-4 py-2 rounded-2xl rounded-br-none max-w-[75%]">
+            You: ${userMessage}
+          </div>
+        </div>`;
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+
+      // loader
+      const loaderId = `loader-${Date.now()}`;
+      chatHistory.innerHTML += `
+        <div id="${loaderId}" class="flex justify-start items-center gap-2 text-sm italic text-gray-400">
+          <div class="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+          <span>Analysing Data...</span>
+        </div>`;
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+
+      try {
+        const endpoint = lastIsSQL ? '/generate_sql' : '/chat';
+        const formData = new FormData();
+        if (lastIsSQL) formData.append('prompt', userMessage);
+        else          formData.append('message', userMessage);
+
+        const response = await fetchWithRetry(endpoint, { method: 'POST', body: formData });
+        const data = await response.json();
+        document.getElementById(loaderId)?.remove();
+
+        if (data.error) throw new Error(data.error);
+
+        // render bot reply
+        const botReplyId = `bot-reply-${Date.now()}`;
+        chatHistory.innerHTML += `
+          <div class="flex justify-start">
+            <div id="${botReplyId}" data-chat-id="${data.chat_id}" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-2xl rounded-bl-none max-w-[75%] relative">
+              Bot: ${data.llm_reply || '✅ Response generated.'}
+              <div class="flex gap-2 mt-2 text-sm text-gray-500">
+                <button onclick="handleFeedback('${botReplyId}', 'up')" class="hover:text-green-600">👍</button>
+                <button onclick="handleFeedback('${botReplyId}', 'down')" class="hover:text-red-600">👎</button>
+              </div>
+           </div>
+          </div>`;
+
+        // optional SQL query block
+        if (data.sql_query) {
+          chatHistory.innerHTML += `
+            <div class="flex justify-start">
+              <pre class="bg-gray-100 text-sm text-gray-700 font-mono p-3 rounded-xl max-w-[90%] overflow-auto">
+                  ${data.sql_query}
+              </pre>
+            </div>`;
+        }
+
+        // optional results table
+        if (data.sql_results && !JSON.stringify(data.sql_results).toLowerCase().includes('sql error')) {
+          const headers = Object.keys(data.sql_results[0]);
+          let tableHTML = `
+            <div class="overflow-x-auto max-w-[90%]">
+              <table class="table-auto border border-gray-300 w-full text-sm mt-2 bg-white rounded-lg">
+                <thead class="bg-green-100 text-left">
+                  <tr>${headers.map(h => `<th class="border px-3 py-2">${h}</th>`).join('')}</tr>
+                </thead>
+                <tbody>
+                  ${data.sql_results.map(row => `
+                    <tr>
+                      ${headers.map(h => `<td class="border px-3 py-2">${row[h]}</td>`).join('')}
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>`;
+          chatHistory.innerHTML += `<div class="flex justify-start">${tableHTML}</div>`;
+        }
+
+        // render chart if provided
+        console.log('Chart config payload:', data.chart);
+        if (data.chart) {
+          const canvasId = `chart-${Date.now()}`;
+          chatHistory.innerHTML += `
+            <div class="flex justify-start mt-2">
+              <canvas id="${canvasId}" class="max-w-[90%] bg-white p-2 rounded-lg shadow-sm"></canvas>
+            </div>`;
+          setTimeout(() => {
+            new Chart(
+              document.getElementById(canvasId),
+              data.chart
+            );
+          }, 0);
+        }
+
+      } catch (err) {
+        document.getElementById(loaderId)?.remove();
+        // --- Retry button appears here on error ---
+        chatHistory.innerHTML += `
+          <div class="flex justify-start items-center gap-2">
+            <div class="bg-red-100 text-red-700 px-4 py-2 rounded-2xl rounded-bl-none max-w-[70%]">
+              Bot Error: ${err.message}
+            </div>
+            <!-- Retry button triggers retryLast() to resend the last message -->
+            <button onclick="retryLast()" class="text-sm bg-yellow-400 hover:bg-yellow-500 text-gray-800 px-3 py-1 rounded-full">
+              Retry
+            </button>
+          </div>`;
+      }
+
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    // Resend last message when Retry is clicked
+    function retryLast() {
+      if (lastMessage) sendMessage(lastMessage);
+    }
+
+    // Wire up form submission
+    document.getElementById('chat-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const txt = document.getElementById('message').value.trim();
+      if (!txt) return;
+      document.getElementById('message').value = '';
+      sendMessage(txt);
+    });
+
+    // Clear chat history handler
+    clearBtn.addEventListener('click', () => chatHistory.innerHTML = '');
+
+    // Feedback buttons
+    function handleFeedback(id, type) {
+      const target = document.getElementById(id);
+      const chatId = target?.getAttribute('data-chat-id');
+      if (!target || !chatId) return;
+      target.querySelectorAll('button').forEach(btn => btn.disabled = true);
+      target.innerHTML += `<div class="mt-2 text-xs text-gray-400">Thanks for your feedback! (${type==='up'?'👍':'👎'})</div>`;
+      fetch('/submit-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, feedback: type==='up'? 'positive':'negative' })
+      });
+    }
+  </script>
+
+</body>
+</html>

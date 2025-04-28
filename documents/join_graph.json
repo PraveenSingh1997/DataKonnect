@@ -1,0 +1,37 @@
+{
+    "FCT_SLS_CNSLD": {
+        "DIM_DT": "DT_KEY",
+        "DIM_ITM": "ITM_KEY",
+        "DIM_LOC": "LOC_KEY",
+        "DIM_ITM_SSN": "ITM_SSN_KEY",
+        "DIM_CNCPT": "CNCPT_KEY",
+        "DIM_STR_CURR": "LOC_KEY",
+        "DIM_STR_CNPT_AREA_MGR": ["CNCPT_KEY", "LOC_KEY"],
+        "LKP_CRRNCY": "CRRNCY_CD"
+    },
+    
+    "DIM_DT": {
+        "FCT_SLS_CNSLD": "DT_KEY"
+    },
+    "DIM_ITM": {
+        "FCT_SLS_CNSLD": "ITM_KEY"
+    },
+    "DIM_LOC": {
+        "FCT_SLS_CNSLD": "LOC_KEY"
+    },
+    "DIM_ITM_SSN": {
+        "FCT_SLS_CNSLD": "ITM_SSN_KEY"
+    },
+    "DIM_CNCPT": {
+        "FCT_SLS_CNSLD": "CNCPT_KEY"
+    },
+    "DIM_STR_CURR": {
+        "FCT_SLS_CNSLD": "LOC_KEY"
+    },
+    "DIM_STR_CNPT_AREA_MGR": {
+        "FCT_SLS_CNSLD": ["CNCPT_KEY", "LOC_KEY"]
+    },
+    "LKP_CRRNCY": {
+        "FCT_SLS_CNSLD": "CRRNCY_CD"
+    }
+}

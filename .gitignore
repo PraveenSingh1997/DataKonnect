@@ -1,0 +1,33 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual env
+venv/
+.venv/
+
+# Flask instance folder
+instance/
+
+# Env vars / secrets
+.env
+*.env
+
+# Database files
+*.sqlite3
+*.db
+
+# IDE/editor configs
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Ignore all Windows DLL files
+*.dll
+
