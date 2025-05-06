@@ -2,3 +2,11 @@
 {"question": "Total Net sales in the year 2023", "error": "SQL Error: Error during request to server: : Unauthorized network access to workspace: 2751553494660337. "}
 {"question": "what is the total sales in the month of MArch 2025", "error": "SQL Error: Error during request to server: : Unauthorized network access to workspace: 2751553494660337. "}
 {"question": "what is the total sales in the month of MArch 2025", "error": "SQL Error: Error during request to server: : Unauthorized network access to workspace: 2751553494660337. "}
+{"question": "what   is  the total net sales in AED in 2024", "error": "SQL Error: Error during request to server. Retry request would exceed Retry policy max retry duration of 900.0 seconds"}
+{"question": "what   is  the total net sales in AED in 2024", "error": "SQL Error: Error during request to server. Retry request would exceed Retry policy max retry duration of 900.0 seconds"}
+{"question": "what is the total sales in AED for the year 2024 in July", "error": "SQL Error: Error during request to server. Retry request would exceed Retry policy max retry duration of 900.0 seconds"}
+{"question": "what is the total sales in AED for the year 2024 in July", "error": "SQL Error: Error during request to server. Retry request would exceed Retry policy max retry duration of 900.0 seconds"}
+{"question": "what is the monthly sales in AED for the year 2024", "error": "SQL Error: Error during request to server. Retry request would exceed Retry policy max retry duration of 900.0 seconds"}
+{"question": "what is the total sales in AED for the year 2024 in July", "error": "SQL Error: Error during request to server. Retry request would exceed Retry policy max retry duration of 900.0 seconds"}
+{"question": "what is the total sales in AED for the year 2024 in July", "error": "SQL Error: Error during request to server. Retry request would exceed Retry policy max retry duration of 900.0 seconds"}
+{"question": "what is the monthly sales in AED for the year 2024", "error": "SQL Error: Error during request to server. Retry request would exceed Retry policy max retry duration of 900.0 seconds"}

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Insights</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+  <div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-center mb-6 text-blue-600">
+      Interactive Data Insights
+    </h1>
+
+    <div class="bg-white shadow-lg rounded-lg p-6 space-y-4">
+      <!-- Insights content rendered as Markdown → HTML -->
+      <div class="prose prose-blue">
+        {{ insights|safe }}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 from .models.models import User, db  # Ensure db is defined in models/__init__.py or models/models.py
 from app.routes.auth import auth_bp
 from app.routes.chat import chat_bp
+from app.services.fetching_insights import insights_bp
 
 # Initialize extensions
 login_manager = LoginManager()
@@ -31,6 +32,7 @@ def create_app():
 
     # Register Blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')  # Routes like /auth/login, /auth/register
-    app.register_blueprint(chat_bp)                      # Routes like / and /chat
+    app.register_blueprint(chat_bp)   
+    app.register_blueprint(insights_bp)                   # Routes like / and /chat
 
     return app

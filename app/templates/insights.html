@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dynamic Data Insights</title>
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+  <div class="max-w-4xl mx-auto p-6 space-y-6">
+
+    <!-- Markdown Report Card -->
+    <div id="report" class="bg-white rounded-2xl shadow p-6 prose"></div>
+
+    <!-- Charts Card -->
+    <div class="bg-white rounded-2xl shadow p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Visual Insights</h2>
+        <div>
+          <label for="chartType" class="mr-2">Chart Type:</label>
+          <select id="chartType" class="border rounded p-1">
+            <option value="line">Line</option>
+            <option value="bar">Bar</option>
+          </select>
+        </div>
+      </div>
+      <div class="space-y-8">
+        <div>
+          <canvas id="trendChart" class="w-full h-64"></canvas>
+        </div>
+        <div>
+          <canvas id="quarterChart" class="w-full h-64"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Fetch & render the Markdown report
+    async function initReport() {
+      const res = await fetch('/api/insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(window.sqlResults || [])
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const md = await res.text();
+      const html = markdownit().render(md);
+      document.getElementById('report').innerHTML = DOMPurify.sanitize(html);
+    }
+
+    // Build Chart.js datasets from SQL results or fallback to static data
+    function getDatasets() {
+      // Example transformation: assuming window.sqlResults = [{sales_month: '2024-01-01', total_net_sales: 27.0}, …]
+      const data = window.sqlResults && window.sqlResults.length
+        ? window.sqlResults.map(r => ({ 
+            month: new Date(r.sales_month).toLocaleString('default', { month:'short' }),
+            value: +r.total_net_sales.toFixed(1)
+          }))
+        : [
+            { month:'Jan', value:27.0},{ month:'Feb', value:25.9},{ month:'Mar', value:48.1},
+            { month:'Apr', value:44.2},{ month:'May', value:31.6},{ month:'Jun', value:29.5},
+            { month:'Jul', value:71.8},{ month:'Aug', value:87.0},{ month:'Sep', value:87.9},
+            { month:'Oct', value:82.7},{ month:'Nov', value:58.3},{ month:'Dec', value:55.2}
+          ];
+
+      const labels = data.map(d => d.month);
+      const values = data.map(d => d.value);
+      return { labels, values };
+    }
+
+    let trendChart, quarterChart;
+
+    function renderCharts(type) {
+      const { labels, values } = getDatasets();
+      const quadLabels = ['Q1','Q2','Q3','Q4'];
+      const quadValues = [
+        values.slice(0,3).reduce((a,b)=>a+b,0),
+        values.slice(3,6).reduce((a,b)=>a+b,0),
+        values.slice(6,9).reduce((a,b)=>a+b,0),
+        values.slice(9,12).reduce((a,b)=>a+b,0)
+      ];
+
+      const commonOpts = {
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'Billions USD' } } }
+      };
+
+      // Destroy existing instances
+      if (trendChart) trendChart.destroy();
+      if (quarterChart) quarterChart.destroy();
+
+      // Trend chart
+      const ctx1 = document.getElementById('trendChart').getContext('2d');
+      trendChart = new Chart(ctx1, {
+        type,
+        data: {
+          labels,
+          datasets: [{ label: 'Monthly Net Sales', data: values, tension: 0.4 }]
+        },
+        options: commonOpts
+      });
+
+      // Quarter chart
+      const ctx2 = document.getElementById('quarterChart').getContext('2d');
+      quarterChart = new Chart(ctx2, {
+        type,
+        data: {
+          labels: quadLabels,
+          datasets: [{ label: 'Quarterly Sales', data: quadValues }]
+        },
+        options: commonOpts
+      });
+    }
+
+    // Initialize everything on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await initReport();
+        renderCharts(document.getElementById('chartType').value);
+
+        // Allow user to switch chart types
+        document.getElementById('chartType').addEventListener('change', e => {
+          renderCharts(e.target.value);
+        });
+      } catch (err) {
+        document.getElementById('report').innerHTML =
+          `<p class="text-red-600">❌ ${err.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

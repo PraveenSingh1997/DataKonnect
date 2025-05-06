@@ -10,6 +10,7 @@ DATABRICKS_CONFIG = {
 
 def run_sql_query(query: str):
     try:
+        print(query)
         print("🔌 Connecting to Databricks SQL Warehouse...")
         with sql.connect(**DATABRICKS_CONFIG) as conn:
             print("✅ Connection established.")
