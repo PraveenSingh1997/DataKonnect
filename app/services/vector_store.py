@@ -10,6 +10,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import PGVector
 from langchain_huggingface import HuggingFaceEmbeddings
+from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from app.config import (
     PG_CONNECTION_STRING,
@@ -30,10 +31,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Constants
-DOC_PATH = r"C:\Users\praveen.singh1\Desktop\DataKonnect\documents\lmg_document.txt"
-RELATIONSHIP_CHUNKS_JSON = r"C:\Users\praveen.singh1\Desktop\DataKonnect\documents\relationship_chunks.json"
-DDL_INFORMATION = r"C:\Users\praveen.singh1\Desktop\DataKonnect\documents\ddl_information.json"
+#DOC_PATH = r"C:\Users\praveen.singh1\Desktop\DataKonnect\documents\lmg_document.txt"
+#RELATIONSHIP_CHUNKS_JSON = r"C:\Users\praveen.singh1\Desktop\DataKonnect\documents\relationship_chunks.json"
+#DDL_INFORMATION = r"C:\Users\praveen.singh1\Desktop\DataKonnect\documents\ddl_information.json"'''
+BASE_DIR = Path(__file__).resolve().parents[2]
 
+DOC_PATH                = BASE_DIR / "documents" / "lmg_document.txt"
+RELATIONSHIP_CHUNKS_JSON = BASE_DIR / "documents" / "relationship_chunks.json"
+DDL_INFORMATION         = BASE_DIR / "documents" / "ddl_information.json"
+
+print(DOC_PATH)
 
 # ─── Initialize PGVector stores ────────────────────────────────────────────────
 # Document/relationship chunks store
