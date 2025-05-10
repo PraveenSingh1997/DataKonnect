@@ -18,13 +18,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Set up environment variables
-os.environ.setdefault("OPENAI_API_KEY", "sk-GO1cPGBgEJhCbgOUSstpAA")
+os.environ.setdefault("OPENAI_API_KEY", "sk-OFhKUP9G7djOzSIa6SEKKQ")
 os.environ.setdefault("OPENAI_API_BASE", "https://lmlitellm.landmarkgroup.com/")
 api_key = os.environ["OPENAI_API_KEY"]
 api_base = os.environ["OPENAI_API_BASE"]
 
 # Retry configuration
-MAX_SQL_RETRIES = 1  # number of retry attempts on SQL errors
+MAX_SQL_RETRIES = 2 # number of retry attempts on SQL errors
 retriever: VectorStoreRetriever = get_vectorstore_retriever()
 
 def init_service():
@@ -132,7 +132,13 @@ def has_error(results):
 def get_bot_response(message, user_id, user_message):
     logger.info(f"get_bot_response called with message: {message}")
     # Step 1: Retrieve context documents
-    relevant_chunks = retriever.get_relevant_documents(message)
+    try:
+        print(message)
+        relevant_chunks = retriever.invoke(message)
+        print(relevant_chunks)
+    except Exception as e:
+        logger.warning(f"Retrieval failed, returning empty list: {e}")
+        relevant_chunks = []
     logger.debug(f"Relevant chunks retrieved: {relevant_chunks}")
 
     if not relevant_chunks:
@@ -142,7 +148,7 @@ def get_bot_response(message, user_id, user_message):
             "sql_query": None,
             "sql_results": None
         }
-
+    print("step 1 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
     # Step 2: Handle chitchat
     top_doc = relevant_chunks[0]
     if is_chitchat_doc(top_doc):
@@ -207,6 +213,7 @@ def get_bot_response(message, user_id, user_message):
             if sql_query:'''
     
     error_message = None
+    print("step 2 +++++++++++++++++++++++++++++++++++++++++++++++++++")
 
 # build the static part of your messages once
     base_messages = [
@@ -214,6 +221,7 @@ def get_bot_response(message, user_id, user_message):
             "You must generate SQL using only the tables and columns provided in the context below. "
             "DT_KEY is a bigint and should be joined via DIM_DT for date filters. Do not guess columns not in context."
             "The lmdata_lh_gld_pprd.er_rtl_dm.FCT_SLS_CNSLD table includes a wide range of columns supporting sales analytics. It contains key fields like DLY_SLS_KEY, DT_KEY is a big int in the format YYYYMMDD , , ITM_KEY, LOC_KEY, and ITM_SSN_KEY, which serve as surrogate or foreign keys for joining with respective dimension tables. Transaction attributes such as TX_TYP_CD, CNCPT_KEY, and CRRNCY_CD define the type, concept, and currency of the transaction. Sales volume is captured through RTL_QTY, HH_RTL_QTY, and FF_RTL_QTY, along with prior year comparisons like RTL_QTY_TRDNG_LY and RTL_QTY_FSCL_LY. Financials are detailed with fields like GRS_SLS_AMT, NET_SLS_AMT, DSCNT_AMT, CPN_AMT, and their household (HH_) and fast fashion (FF_) counterparts. Unit pricing data appears in columns such as UNT_RTL, ORGNL_UNT_RTL, REG_UNT_RTL, and REG_UNT_RTL_VAT_INC. Profitability metrics include COGS_1, COGS_2, GRS_MRGN_1, GRS_MRGN_2, and INTK_MRGN, while margin fields such as MRKUP, MRKDN, and AVG_SLS_PR_SQ_FT offer insights into pricing strategy and efficiency. Tax information is stored in TAX_1_AMT, TAX_2_AMT, TAX_3_AMT, TAX_EXMPT, and price-related indicators like PRC_FLG and MRK_FLG. Operational metadata includes SEC_GRP_CD, INTGRTN_ID, SRC_SYS_CD, SRC_SYS_VER, BTCH_ID, CRT_DTTM, and LST_MODFD_DTTM. Additional fields such as TRDNG_YR_AGO_DT_KEY, FSCL_YR_AGO_DT_KEY, LOC_CD, ITM_CD, FST_SLD_PRC, FST_SLD_DT, and SLS_PGV_DISTRB_VAL support historical, store, and item-level tracking. Altogether, this table offers rich granularity for measuring sales, trends, profitability, and store-item interactions over time.lmdata_lh_gld_pprd.er_rtl_dm.FCT_SLS_CNSLD joins with lmdata_lh_gld_pprd.er_rtl_dm.DIM_DT using DT_KEY is a big int in the format YYYYMMDD ,  to support time-based aggregations and YOY comparisons. It links with DIM_ITM, DIM_ITM_SSN, and DIM_LOC using ITM_KEY, ITM_SSN_KEY, and LOC_KEY respectively to enable granular analysis at the item-location-date level. Additional relationships with DIM_CNCPT, lmdata_lh_gld_pprd.er_rtl_dm.DIM_STR_CNPT_AREA_MGR, DIM_STATIC_EXCH_CURRENCY_AED, lmdata_lh_gld_pprd.er_rtl_dm.DIM_ITM_LOC, and DIM_STR_CURR provide contextual enrichment around store hierarchy, pricing, currency normalization, and sales performance. This table serves as the core for daily sales reporting and supports financial, operational, and strategic KPIs across concepts, channels, and territories."
+            "decimal should be till 2 digits ."
         )},
         {"role": "system", "content": f"Context:\n{context}"},
         {"role": "user",   "content": message}
@@ -232,21 +240,25 @@ def get_bot_response(message, user_id, user_message):
                 -1,
                 {"role": "system",
                 "content": f"Note: The previous SQL execution failed with error:\n{error_message}"}
-            )
+            )           
 
         # call the LLM
+        print("step 3 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++ ")
+        print(messages)
         resp = requests.post(
-            f"{api_base}/v1/chat/completions",
+            f"{api_base}v1/chat/completions",
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             json={
-                "model": "landmark-gpt-4o-mini",
+                "model": "deepseek-r1",
                 "messages": messages,
                 "temperature": 0.7,
                 "max_tokens": 1000
             }
         )
+        print(resp)
         resp.raise_for_status()
         llm_reply = resp.json()["choices"][0]["message"]["content"].strip()
+        print(llm_reply)
 
         # pull out the SQL
         sql_query = extract_sql_from_text(llm_reply)

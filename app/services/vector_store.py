@@ -268,7 +268,7 @@ if __name__ == "__main__":
         print(f"🔢 Similarity: {result['similarity']:.4f}")
         print(f"🧩 Chunk: {result['chunk']}")
     else:
-        print("❌ Failed to resolve prompt.")
+        print("❌ Failed to resolve prompt.")'''
 
 if __name__ == "__main__":
     # Example prompt to test semantic search
@@ -288,4 +288,3 @@ if __name__ == "__main__":
     docs = retriever.get_relevant_documents(prompt)
     for doc in docs:
         print(f"📄 Content:\n{doc.page_content}\n📎 Metadata: {doc.metadata}\n" + "-" * 80)
-'''

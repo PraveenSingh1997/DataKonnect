@@ -23,12 +23,12 @@ EMBEDDING_MODEL = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
 SENTENCE_MODEL = SentenceTransformer(SENTENCE_MODEL_NAME)
 
 # ─── LLM Configuration ─────────────────────────────────────────────────────────
-os.environ["OPENAI_API_KEY"] = "sk-GO1cPGBgEJhCbgOUSstpAA"
+os.environ["OPENAI_API_KEY"] = "sk-OFhKUP9G7djOzSIa6SEKKQ"
 os.environ["OPENAI_API_BASE"] = "https://lmlitellm.landmarkgroup.com/"
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 OPENAI_API_BASE = os.environ["OPENAI_API_BASE"]
 
-LLM_MODEL          = "landmark-gpt-4o-mini"
+LLM_MODEL          = "deepseek-r1"
 LLM_TEMPERATURE    = float(os.getenv("LLM_TEMPERATURE", "0.7"))
 LLM_MAX_TOKENS     = int(os.getenv("LLM_MAX_TOKENS", "1000"))
 
